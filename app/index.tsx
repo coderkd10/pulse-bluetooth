@@ -5,7 +5,7 @@ import {
   NativeModules, NativeEventEmitter 
 } from "react-native";
 import BleManager, {
-  BleDiscoverPeripheralEvent,
+  Peripheral,
   BleConnectPeripheralEvent,
   BleDisconnectPeripheralEvent,
   
@@ -17,14 +17,17 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 export default function Index() {
   const [isScanning, setIsScanning] = useState(false);
-  const [devices, setDevices] = useState([]);
+  const [peripherals, setPeripherals] = useState(
+    new Map<Peripheral['id'], Peripheral>()
+  );
 
   const handleStopScan = () => {
     console.debug('[handleStopScan] scan completed');
     setIsScanning(false);
   }
-  const handleDiscoverPeripheral = (peripheral: BleDiscoverPeripheralEvent) => {
+  const handleDiscoverPeripheral = (peripheral: Peripheral) => {
     console.debug('[handleDiscoverPeripheral] new BT peripheral: ', peripheral);
+    setPeripherals(peripherals => new Map(peripherals.set(peripheral.id, peripheral)));
   }
   const handleConnectPeripheral = (event: BleConnectPeripheralEvent) => {
     console.debug('[handleConnectPeripheral] peripheral connected: ', event.peripheral, event);
@@ -57,6 +60,7 @@ export default function Index() {
 
   const startScan = () => {
     setIsScanning(true);
+    setPeripherals(new Map());
     console.log('[startScan] scan initiated.');
     BleManager.scan([], 5, true)
       .then(() => {
@@ -67,9 +71,13 @@ export default function Index() {
       });
   }
 
+  // TODO: fix type
   const renderDeviceItem = ({ item }: {item: any}) => (
     <View style={styles.deviceContainer}>
-      <Text style={styles.deviceName}>{item.name || 'Unknown Device'}</Text>
+      <View>
+        {item.name && <Text style={styles.deviceName}>{item.name}</Text>}
+        <Text style={styles.deviceMac}>{item.id}</Text>
+      </View>
       <TouchableOpacity style={styles.button} onPress={() => {
         // TODO
         // connectToDevice(item.id)}
@@ -79,6 +87,7 @@ export default function Index() {
     </View>
   );
 
+  // TODO: fix type
   const renderConnectedDeviceItem = ({ item }: {item: any}) => (
     <View style={styles.deviceContainer}>
       <Text style={styles.deviceName}>{item.name || 'Unknown Device'}</Text>
@@ -95,10 +104,14 @@ export default function Index() {
   );
 
   return (<View style={styles.container}>
-      <Button title="Start Scan" onPress={startScan} disabled={isScanning} />
+      <Button 
+        title={isScanning ? "Scanning ...": "Scan Bluetooth Devices"} 
+        onPress={startScan}
+        disabled={isScanning}
+      />
       <Text style={styles.subtitle}>Discovered Devices:</Text>
       <FlatList
-        data={[]}
+        data={[...peripherals.values()]}
         renderItem={renderDeviceItem}
         keyExtractor={(item) => item.id}
         style={styles.list}
@@ -120,32 +133,35 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
   subtitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginVertical: 10,
   },
   list: {
+    padding: 5,
+    paddingBottom: 100,
     marginBottom: 20,
+    borderWidth: 1,
+    borderRadius: 5,
+    minHeight: '10%'
   },
   deviceContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 10,
-    marginVertical: 5,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
   },
   deviceName: {
     fontSize: 16,
+  },
+  deviceMac: {
+    color: '#666',
+    fontWeight: 'bold',
   },
   button: {
     backgroundColor: '#007BFF',
