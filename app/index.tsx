@@ -194,6 +194,10 @@ export default function Index() {
     }
   }
 
+  const disconnectDevice = async (deviceID: string) => {
+    await BleManager.disconnect(deviceID);
+  }
+
   const readData = (device: BTDevice) => {
     if (!device.peripheralInfo) {
       Alert.alert(`No peripheral info found for device ${device.peripheral.id}`);
@@ -254,16 +258,31 @@ export default function Index() {
         {name && <Text style={styles.deviceName}>{name}</Text>}
         <Text style={styles.deviceID}>{id}</Text>
       </View>
-      <TouchableOpacity
-        style={[styles.button,{
-          backgroundColor: 'red',
-        }]}
-        onPress={() => {
-          readData(device);
-        }}
-      >
-        <Text style={styles.buttonText}>Read Data</Text>
-      </TouchableOpacity>
+      <View style={{
+        flexDirection: 'row',
+        gap: 10,
+      }}>
+        <TouchableOpacity
+          style={[styles.button,{
+            backgroundColor: 'red',
+          }]}
+          onPress={() => {
+            disconnectDevice(device.peripheral.id);
+          }}
+        >
+          <Text style={styles.buttonText}>Disconnect</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button,{
+            backgroundColor: 'green',
+          }]}
+          onPress={() => {
+            readData(device);
+          }}
+        >
+          <Text style={styles.buttonText}>Read Data</Text>
+        </TouchableOpacity>
+      </View>
     </View>);
   }
 
@@ -485,14 +504,4 @@ const mockReadCharacteristics = async (serviceID: string, characteristicID: stri
   }
   throw "Error reading 00002a0f-0000-1000-8000-00805f9b34fb status=137";
 }
-const mockReadData = () => {
-  const l = mockCharacteristics.map(c => {
-    mockReadCharacteristics(c.serviceID, c.characteristicID)
-      .then(data => {
-        console.debug(`[readData] read data device:${device.peripheral.id} service:${c.service} characteristic:${c.characteristic} -`, data);
-      })
-      .catch(err => {
-        console.error(`[readData] error reading device:${device.peripheral.id} service:${c.service} characteristic:${c.characteristic} - `, err);
-      })
-  });
-}
+
