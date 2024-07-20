@@ -81,7 +81,7 @@ export default function Index() {
     deviceID: string, serviceID: string, characteristicID: string, newReadingState: BTReadingState
   ) => {
     setCurrentReadingDevice(rDevice => {
-      if (rDevice && rDevice.device.id == deviceID) {
+      if (rDevice && rDevice.device.id === deviceID) {
         const key = getReadingDeviceCMapKey(serviceID, characteristicID);
         const m = rDevice.readableCharacteristics;
         const c = m.get(key);
@@ -127,7 +127,7 @@ export default function Index() {
         listener.remove();
       }
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startScan = () => {
     setIsScanning(true);
@@ -161,6 +161,7 @@ export default function Index() {
       }
     } catch (err) {
       Alert.alert(`Unable to connect to ${device.id}`);
+      console.log(`[connectToDevice] error connecting to ${device.id}`, err);
       removeConnectingDevice(device.id);
     }
   }
