@@ -8,7 +8,6 @@ import {
 import BleManager, {
   Peripheral,
   PeripheralInfo,
-  BleConnectPeripheralEvent,
   BleDisconnectPeripheralEvent,
   
 } from "react-native-ble-manager";
@@ -112,9 +111,6 @@ export default function Index() {
     console.debug('[handleDiscoverPeripheral] new BT peripheral: ', peripheral);
     setDevices(peripherals => new Map(peripherals.set(peripheral.id, { peripheral, status: ConnectionStatus.Not_Connected })));
   }
-  // const handleConnectPeripheral = (event: BleConnectPeripheralEvent) => {
-  //   console.debug('[handleConnectPeripheral] peripheral connected: ', event.peripheral, event);
-  // }
   const handleDisconnectPeripheral = (event: BleDisconnectPeripheralEvent) => {
     console.debug('[handleDisconnecPeripheral] peripheral disconnected: ', event.peripheral, event);
     updateDeviceStatus(event.peripheral, ConnectionStatus.Not_Connected);
@@ -130,7 +126,6 @@ export default function Index() {
     const listeners = [
       bleManagerEmitter.addListener('BleManagerStopScan', handleStopScan),
       bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', handleDiscoverPeripheral),
-      // bleManagerEmitter.addListener('BleManagerConnectPeripheral', handleConnectPeripheral),
       bleManagerEmitter.addListener('BleManagerDisconnectPeripheral', handleDisconnectPeripheral),
     ];
 
@@ -144,8 +139,8 @@ export default function Index() {
 
   const startScan = () => {
     // setModalVisible(true);
-    startMockReading();
-    return;
+    // startMockReading();
+    // return;
 
     setIsScanning(true);
     setDevices(new Map());
