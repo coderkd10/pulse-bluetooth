@@ -23,8 +23,8 @@ npm run android
 npm run ios
 ```
 
-Since this app has native library for interfacing with Bluetooth hardware, you'll need to make sure you have the native app development environment configured correctly.
+Since this app has a native component for interfacing with Bluetooth hardware, you'll need to make sure you have the native app development environment configured correctly.
 
-For refer expo's [android](https://docs.expo.dev/get-started/set-up-your-environment/?mode=development-build&buildEnv=local&platform=android&device=physical) or [ios](https://docs.expo.dev/get-started/set-up-your-environment/?mode=development-build&buildEnv=local&platform=ios&device=physical) setup docs for detailed steps.
+Please refer expo's [android](https://docs.expo.dev/get-started/set-up-your-environment/?mode=development-build&buildEnv=local&platform=android&device=physical) or [ios](https://docs.expo.dev/get-started/set-up-your-environment/?mode=development-build&buildEnv=local&platform=ios&device=physical) setup docs for detailed steps.
 
 I've tested the app on my Android device. I haven't tried it out on an ios device yet.
