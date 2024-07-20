@@ -24,21 +24,26 @@ type BTDevice = {
 };
 
 
-type BTCharacteristicReadingState = {
-  status: "reading"
+type BTReadingState = {
+  status: "reading",
 } | {
   status: "success",
   data: string,
 } | {
   status: "error",
-  error: string
+  error: string,
 }
-type T1 = { serviceID: string, characteristicID: string, readingState: BTCharacteristicReadingState };
-type BTDeviceCurrentlyReading = {
-  device: { id: string, name: string },
-  characteristics: Map<string, T1>,
+type BTReadingCharacteristic = {
+  serviceID: string,
+  characteristicID: string,
+  readingState: BTReadingState,
+};
+type BTReadingDevice = {
+  device: { id: string, name?: string },
+  readableCharacteristics: Map<string, BTReadingCharacteristic>,
 }
-type T = BTDeviceCurrentlyReading['characteristics'];
+const getReadingDeviceCMapKey = (serviceID: string, characteristicID: string) =>
+  `${serviceID}-${characteristicID}`;
 
 export default function Index() {
   const [isScanning, setIsScanning] = useState(false);
@@ -46,61 +51,23 @@ export default function Index() {
     new Map<string, BTDevice>()
   );
 
-  // const [modalVisible, setModalVisible] = useState(false);
-  const [currentlyReading, setCurrentlyReading] = useState<BTDeviceCurrentlyReading | null>(null);
+  const [readingDevice, setReadingDevice] = useState<BTReadingDevice | null>(null);
   const updateCharacteristicReadingStatus = (
-    deviceID: string, serviceID: string, characteristicID: string, newReadingState: BTCharacteristicReadingState) => {
-      setCurrentlyReading(currentlyReading => {
-        if (currentlyReading && currentlyReading.device.id == deviceID) {
-          const key = `${serviceID}-${characteristicID}`;
-          const characteristicsMap = currentlyReading.characteristics;
-          const c = characteristicsMap.get(key);
+    deviceID: string, serviceID: string, characteristicID: string, newReadingState: BTReadingState) => {
+      setReadingDevice(readingDevice => {
+        if (readingDevice && readingDevice.device.id == deviceID) {
+          const key = getReadingDeviceCMapKey(serviceID, characteristicID);
+          const m = readingDevice.readableCharacteristics;
+          const c = m.get(key);
           if (c) {
             c.readingState = newReadingState;
-            currentlyReading.characteristics = new Map(characteristicsMap.set(key, c));
+            readingDevice.readableCharacteristics = new Map(m.set(key, c));
           }
-          return {...currentlyReading};
+          return {...readingDevice};
         }
-        return currentlyReading;
-      })
+        return readingDevice;
+      });
   }
-  const startMockReading = () => {
-    const m: T = new Map();
-    for (let c of mockCharacteristics) {
-      const key = `${c.serviceID}-${c.characteristicID}`;
-      m.set(key, { serviceID: c.serviceID, characteristicID: c.characteristicID, readingState: { status: 'reading'} })
-    }
-    const mockDevice = { name: "JBL Flip", id:"04:21:44:AC:00:E4"};
-    setCurrentlyReading({
-      device: mockDevice,
-      characteristics: m
-    });
-    mockCharacteristics.forEach(c => {
-      mockReadCharacteristics(c.serviceID, c.characteristicID)
-        .then(data => {
-            const bytes = String.fromCharCode.apply(null, data);
-            const dataB64 = btoa(bytes);
-            updateCharacteristicReadingStatus(
-              mockDevice.id, c.serviceID, c.characteristicID,
-              {
-                status: "success",
-                data: dataB64,
-              }
-            );
-        })
-        .catch(err => {
-          updateCharacteristicReadingStatus(
-            mockDevice.id, c.serviceID, c.characteristicID,
-            {
-              status: "error",
-              error: err.toString(),
-            }
-          );
-        })
-    });
-
-  }
-
 
 
   const handleStopScan = () => {
@@ -138,10 +105,6 @@ export default function Index() {
   }, []);
 
   const startScan = () => {
-    // setModalVisible(true);
-    // startMockReading();
-    // return;
-
     setIsScanning(true);
     setDevices(new Map());
     console.log('[startScan] scan initiated.');
@@ -210,17 +173,45 @@ export default function Index() {
     const readableCharacteristics = device.peripheralInfo.characteristics.filter(c => {
       return c.characteristic && c.service && c.properties.Read
     });
-    console.log(readableCharacteristics);
     console.debug(`[readData] found ${readableCharacteristics.length} readable characteristics for ${device.peripheral.id}`);
-    const l = readableCharacteristics.map(c => {
+    
+    // update state to reflect we're reading this device
+    const cMap: Map<string, BTReadingCharacteristic> = new Map();
+    for (let c of readableCharacteristics) {
+      const key = getReadingDeviceCMapKey(c.service, c.characteristic);
+      cMap.set(key, { serviceID: c.service, characteristicID: c.characteristic, readingState: { status: 'reading'} });
+    }
+    setReadingDevice({
+      device: { id: device.peripheral.id, name: device.peripheral.name },
+      readableCharacteristics: cMap
+    });
+
+    // start reading from BT
+    for (let c of readableCharacteristics) {
       BleManager.read(device.peripheral.id, c.service, c.characteristic)
         .then(data => {
           console.debug(`[readData] read data device:${device.peripheral.id} service:${c.service} characteristic:${c.characteristic} -`, data);
+          const bytes = String.fromCharCode.apply(null, data);
+          const dataB64 = btoa(bytes);
+          updateCharacteristicReadingStatus(
+            device.peripheral.id, c.service, c.characteristic,
+            {
+              status: "success",
+              data: dataB64,
+            }
+          );
         })
         .catch(err => {
-          console.error(`[readData] error reading device:${device.peripheral.id} service:${c.service} characteristic:${c.characteristic} - `, err);
-        })
-    });
+          console.debug(`[readData] error reading device:${device.peripheral.id} service:${c.service} characteristic:${c.characteristic} - `, err);
+          updateCharacteristicReadingStatus(
+            device.peripheral.id, c.service, c.characteristic,
+            {
+              status: "error",
+              error: err.toString(),
+            }
+          );
+        });
+    }
   }
 
   const renderDeviceItem = ({ item: device }: { item: BTDevice }) => {
@@ -286,7 +277,7 @@ export default function Index() {
     </View>);
   }
 
-  const renderData = ({item}: { item: T1 }) => {
+  const renderData = ({item}: { item: BTReadingCharacteristic }) => {
     return (<View style={{
         padding: 10,
         marginBottom: 10,
@@ -305,31 +296,33 @@ export default function Index() {
     </View>);
   }
 
+  const discoveredDevices = [...devices.values()].filter(d => d.status !== ConnectionStatus.Connected);
+  const connectedDevices = [...devices.values()].filter(d => d.status === ConnectionStatus.Connected);
   return (<View style={styles.container}>
       <Button 
         title={isScanning ? "Scanning ...": "Scan Bluetooth Devices"} 
         onPress={startScan}
         disabled={isScanning}
       />
-      <Text style={styles.subtitle}>Discovered Devices:</Text>
+      <Text style={styles.subtitle}>Discovered Devices ({discoveredDevices.length}):</Text>
       <FlatList
-        data={[...devices.values()].filter(d => d.status !== ConnectionStatus.Connected)}
+        data={discoveredDevices}
         renderItem={renderDeviceItem}
         keyExtractor={device => device.peripheral.id}
         style={styles.list}
       />
-      <Text style={styles.subtitle}>Connected Devices:</Text>
+      <Text style={styles.subtitle}>Connected Devices ({connectedDevices.length}):</Text>
       <FlatList
-        data={[...devices.values()].filter(d => d.status === ConnectionStatus.Connected)}
+        data={connectedDevices}
         renderItem={renderConnectedDeviceItem}
         keyExtractor={device => device.peripheral.id}
         style={styles.list}
       />
-      {currentlyReading && <Modal
+      {readingDevice && <Modal
         transparent={true}
         animationType="slide"
-        visible={!!currentlyReading}
-        onRequestClose={() => { setCurrentlyReading(null); }}
+        visible={!!readingDevice}
+        onRequestClose={() => { setReadingDevice(null); }}
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -348,17 +341,17 @@ export default function Index() {
                 padding: 12,
                 marginBottom: 20,
               }}>
-                <DeviceName name="JBL Flip" id="04:21:44:AC:00:E4"/>
+                <DeviceName id={readingDevice.device.id} name={readingDevice.device.name}/>
               </View>
             </View>
-            <Text style={{ marginBottom: 10 }}>Found 4 readable data elements ("characteristics").</Text>
+            <Text style={{ marginBottom: 10 }}>Found {readingDevice.readableCharacteristics.size} readable data elements ("characteristics").</Text>
             <FlatList
-              data={[...currentlyReading.characteristics.values()]}
+              data={[...readingDevice.readableCharacteristics.values()]}
               renderItem={renderData}
-              keyExtractor={item => `${item.serviceID}-${item.characteristicID}`}
+              keyExtractor={item => getReadingDeviceCMapKey(item.serviceID, item.characteristicID)}
               style={styles.list}
             />
-            <Button title="Done" onPress={() => { setCurrentlyReading(null); }} />
+            <Button title="Done" onPress={() => { setReadingDevice(null); }} />
           </View>
         </View>
       </Modal>}
