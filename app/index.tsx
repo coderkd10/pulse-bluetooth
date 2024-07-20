@@ -16,13 +16,15 @@ import { handleBtAndroidPermissions } from "@/utils/bluetooth";
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
-enum ConnectionStatus { Not_Connected, Connecting, Connected };
-type BTDevice = {
+type BTNotConnectedDevice = {
   peripheral: Peripheral,
-  status: ConnectionStatus,
-  peripheralInfo?: PeripheralInfo,
+  isConnecting: boolean,
 };
 
+type BTConnectedDevice = {
+  peripheral: Peripheral,
+  peripheralInfo?: PeripheralInfo,
+};
 
 type BTReadingState = {
   status: "reading",
@@ -41,15 +43,65 @@ type BTReadingCharacteristic = {
 type BTReadingDevice = {
   device: { id: string, name?: string },
   readableCharacteristics: Map<string, BTReadingCharacteristic>,
-}
+};
 const getReadingDeviceCMapKey = (serviceID: string, characteristicID: string) =>
   `${serviceID}-${characteristicID}`;
 
 export default function Index() {
-  const [isScanning, setIsScanning] = useState(false);
-  const [devices, setDevices] = useState(
-    new Map<string, BTDevice>()
-  );
+  const [ isScanning, setIsScanning ] = useState(false);
+  const [ discoveredDevices, setDiscoveredDevices ] = useState(new Map<string, Peripheral>());
+  const [ connectingDevices, setConnectingDevices ] = useState(new Map<string, Peripheral>());
+  const [ connectedDevices, setConnectedDevices ] = useState(new Map<string, BTConnectedDevice>());
+
+  const addConnectingDevice = (device: Peripheral) => {
+    setConnectingDevices(devices => {
+      devices.set(device.id, device);
+      return new Map(devices);
+    });
+  }
+  const removeConnectingDevice = (deviceID: string) => {
+    setConnectingDevices(devices => {
+      devices.delete(deviceID);
+      return new Map(devices);
+    });
+  }
+  const addConnectedDevice = (device: BTConnectedDevice) => {
+    setConnectedDevices(devices => {
+      devices.set(device.peripheral.id, device);
+      return new Map(devices);
+    });
+  }
+  const removeConnectedDevice = (deviceID: string) => {
+    setConnectedDevices(devices => {
+      devices.delete(deviceID);
+      return new Map(devices);
+    });
+  }
+  const addConnectedDevicePeripheralInfo = (deviceID: string, peripheralInfo: PeripheralInfo) => {
+    setConnectedDevices(devices => {
+      const device = devices.get(deviceID);
+      if (!device) {
+        return devices;
+      }
+      devices.set(deviceID, { ...device, peripheralInfo });
+      return new Map(devices);
+    });
+  }
+
+  const getNotConnectedDevices = () => {
+    const outMap = new Map<string, BTNotConnectedDevice>();
+    for (let [deviceID, device] of discoveredDevices) {
+      if (!connectedDevices.has(deviceID)) {
+        outMap.set(deviceID, { peripheral: device, isConnecting: false });
+      }
+    }
+    for (let [deviceID, device] of connectingDevices) {
+      if (!connectedDevices.has(deviceID)) {
+        outMap.set(deviceID, { peripheral: device, isConnecting: true });
+      }
+    }
+    return [ ...outMap.values() ];
+  }
 
   const [readingDevice, setReadingDevice] = useState<BTReadingDevice | null>(null);
   const updateCharacteristicReadingStatus = (
@@ -76,11 +128,11 @@ export default function Index() {
   }
   const handleDiscoverPeripheral = (peripheral: Peripheral) => {
     console.debug('[handleDiscoverPeripheral] new BT peripheral: ', peripheral);
-    setDevices(peripherals => new Map(peripherals.set(peripheral.id, { peripheral, status: ConnectionStatus.Not_Connected })));
+    setDiscoveredDevices(devices => new Map(devices.set(peripheral.id, peripheral)));
   }
   const handleDisconnectPeripheral = (event: BleDisconnectPeripheralEvent) => {
     console.debug('[handleDisconnecPeripheral] peripheral disconnected: ', event.peripheral, event);
-    updateDeviceStatus(event.peripheral, ConnectionStatus.Not_Connected);
+    removeConnectedDevice(event.peripheral);
   }
 
   useEffect(() => {
@@ -106,7 +158,8 @@ export default function Index() {
 
   const startScan = () => {
     setIsScanning(true);
-    setDevices(new Map());
+    setDiscoveredDevices(new Map());
+
     console.log('[startScan] scan initiated.');
     BleManager.scan([], 4, true)
       .then(() => {
@@ -114,46 +167,28 @@ export default function Index() {
       })
       .catch(err => {
         console.error('[startScan] scan promise error: ', err);
-        Alert.alert("Unable to Scan Bl");
+        Alert.alert("Unable to Scan Bluetooth");
       });
   }
 
-  const updateDevice = (deviceID: string, updaterFn: (device: BTDevice) => void) => {
-    setDevices(devices => {
-      const device = devices.get(deviceID);
-      if (device) {
-        updaterFn(device);
-        return new Map(devices.set(deviceID, device));
-      }
-      return devices
-    });
-  }
-  const updateDeviceStatus = (deviceID: string, status: ConnectionStatus) => {
-    updateDevice(deviceID, device => {
-      device.status = status;
-    });
-  }
-
-  const connectToDevice = async (deviceID: string) => {
-    updateDeviceStatus(deviceID, ConnectionStatus.Connecting)
+  const connectToDevice = async (device: Peripheral) => {
+    addConnectingDevice(device);
     try {
-      await BleManager.connect(deviceID);
-      updateDeviceStatus(deviceID, ConnectionStatus.Connected);
+      await BleManager.connect(device.id);
+      removeConnectingDevice(device.id);
+      addConnectedDevice({ peripheral: device });
       try {
-        const peripheralInfo = await BleManager.retrieveServices(deviceID);
+        const peripheralInfo = await BleManager.retrieveServices(device.id);
         console.log(
-          `[connectToDevice] read peripheral info for ${deviceID}:\n`, 
-          JSON.stringify(peripheralInfo, null, 2), '\n---\n\n');
-        updateDevice(deviceID, device => {
-          device.peripheralInfo = peripheralInfo;
-        });
+          `[connectToDevice] read peripheral info for ${device.id}: `, 
+          JSON.stringify(peripheralInfo));
+        addConnectedDevicePeripheralInfo(device.id, peripheralInfo);
       } catch (err) {
         console.error('[connectToDevice] unable to retrieve services: ', err);
       }
     } catch (err) {
-      console.error('[connectToDevice] unable to connect: ', err);
-      Alert.alert(`Unable to connect to ${deviceID}`);
-      updateDeviceStatus(deviceID, ConnectionStatus.Not_Connected);
+      Alert.alert(`Unable to connect to ${device.id}`);
+      removeConnectingDevice(device.id);
     }
   }
 
@@ -161,7 +196,7 @@ export default function Index() {
     await BleManager.disconnect(deviceID);
   }
 
-  const readData = (device: BTDevice) => {
+  const readBTData = (device: BTConnectedDevice) => {
     if (!device.peripheralInfo) {
       Alert.alert(`No peripheral info found for device ${device.peripheral.id}`);
       return;
@@ -214,36 +249,31 @@ export default function Index() {
     }
   }
 
-  const renderDeviceItem = ({ item: device }: { item: BTDevice }) => {
+  const renderNotConnectedDeviceItem = ({ item: device }: { item: BTNotConnectedDevice }) => {
     const id = device.peripheral.id;
     const name = device.peripheral.name;
-    const status = device.status;
     return (<View style={styles.deviceContainer}>
       <View>
         {name && <Text style={styles.deviceName}>{name}</Text>}
         <Text style={styles.deviceID}>{id}</Text>
       </View>
       <TouchableOpacity 
-        style={[styles.button, status !== ConnectionStatus.Not_Connected && { backgroundColor: '#ccc' }]}
-        disabled={status !== ConnectionStatus.Not_Connected}
+        style={[styles.button, device.isConnecting && { backgroundColor: '#ccc' }]}
+        disabled={device.isConnecting}
         onPress={() => {
-          connectToDevice(device.peripheral.id);
+          connectToDevice(device.peripheral);
         }}
       >
         <Text style={styles.buttonText}>
-          {status === ConnectionStatus.Not_Connected ? "Connect" : 
-            status === ConnectionStatus.Connecting ? "Connecting" :
-              "Connected"
-          }
+          {device.isConnecting ? "Connecting" : "Connect"}
         </Text>
       </TouchableOpacity>
     </View>);
   }
 
-  const renderConnectedDeviceItem = ({ item: device }: {item: BTDevice}) => {
+  const renderConnectedDeviceItem = ({ item: device }: {item: BTConnectedDevice}) => {
     const id = device.peripheral.id;
     const name = device.peripheral.name;
-    const status = device.status;
     return (<View style={styles.deviceContainer}>
        <View>
         {name && <Text style={styles.deviceName}>{name}</Text>}
@@ -264,11 +294,14 @@ export default function Index() {
           <Text style={styles.buttonText}>Disconnect</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button,{
-            backgroundColor: 'green',
-          }]}
+          style={[
+            styles.button,
+            { backgroundColor: 'green' },
+            !device.peripheralInfo && { backgroundColor: '#ccc' }
+          ]}
+          disabled={!device.peripheralInfo}
           onPress={() => {
-            readData(device);
+            readBTData(device);
           }}
         >
           <Text style={styles.buttonText}>Read Data</Text>
@@ -296,24 +329,25 @@ export default function Index() {
     </View>);
   }
 
-  const discoveredDevices = [...devices.values()].filter(d => d.status !== ConnectionStatus.Connected);
-  const connectedDevices = [...devices.values()].filter(d => d.status === ConnectionStatus.Connected);
+  const notConnectedDevicesList = getNotConnectedDevices();
+  const connectedDevicesList = [...connectedDevices.values()];
+
   return (<View style={styles.container}>
       <Button 
         title={isScanning ? "Scanning ...": "Scan Bluetooth Devices"} 
         onPress={startScan}
         disabled={isScanning}
       />
-      <Text style={styles.subtitle}>Discovered Devices ({discoveredDevices.length}):</Text>
+      <Text style={styles.subtitle}>Discovered Devices ({notConnectedDevicesList.length}):</Text>
       <FlatList
-        data={discoveredDevices}
-        renderItem={renderDeviceItem}
+        data={notConnectedDevicesList}
+        renderItem={renderNotConnectedDeviceItem}
         keyExtractor={device => device.peripheral.id}
         style={styles.list}
       />
-      <Text style={styles.subtitle}>Connected Devices ({connectedDevices.length}):</Text>
+      <Text style={styles.subtitle}>Connected Devices ({connectedDevicesList.length}):</Text>
       <FlatList
-        data={connectedDevices}
+        data={connectedDevicesList}
         renderItem={renderConnectedDeviceItem}
         keyExtractor={device => device.peripheral.id}
         style={styles.list}
@@ -439,62 +473,10 @@ const styles = StyleSheet.create({
 
 
 const DeviceName = ({name, id}: {name?: string, id: string}) => {
-  return (<View>
-        {name && <Text style={styles.deviceName}>{name}</Text>}
-        <Text style={styles.deviceID}>{id}</Text>
-      </View>);
+  return (
+    <View>
+      {name && <Text style={styles.deviceName}>{name}</Text>}
+      <Text style={styles.deviceID}>{id}</Text>
+    </View>
+  );
 }
-
-// -- mock data
-const mockCharacteristics = [
-  {
-    serviceID: "1800",
-    characteristicID: "2a00",
-    data: [105, 80, 104, 111, 110, 101],
-  },
-  {
-    serviceID: "1800",
-    characteristicID: "2a01",
-    data: [64, 0],
-  },
-  {
-    serviceID: "180a",
-    characteristicID: "2a29",
-    data: [65, 112, 112, 108, 101, 32, 73, 110, 99, 46],
-  },
-  {
-    serviceID: "180a",
-    characteristicID: "2a24",
-    data: [105, 80, 104, 111, 110, 101, 49, 52, 44, 53],
-  },
-  {
-    serviceID: "180f",
-    characteristicID: "2a19"
-  },
-  {
-    serviceID: "1805",
-    characteristicID: "2a2b"
-  },
-  {
-    serviceID: "89d3502b-0f36-433a-8ef4-c502ad55f8dc",
-    characteristicID: "c6b2f38c-23ab-46d8-a6ab-a3a870bbd5d7"
-  }
-]
-const delay = (ms: number) => {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(true);
-    }, ms);
-  });
-}
-const mockReadCharacteristics = async (serviceID: string, characteristicID: string) => {
-  const waitMillis = Math.random()*10*1000;
-  await delay(waitMillis);
-  for (let c of mockCharacteristics) {
-    if ((serviceID == c.serviceID) && (characteristicID == c.characteristicID) && c.data) {
-      return c.data;
-    }
-  }
-  throw "Error reading 00002a0f-0000-1000-8000-00805f9b34fb status=137";
-}
-
