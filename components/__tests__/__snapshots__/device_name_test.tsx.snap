@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders correctly 1`] = `
+<View>
+  <Text
+    style={
+      {
+        "fontSize": 16,
+      }
+    }
+  >
+    JBL Flip
+  </Text>
+  <Text
+    style={
+      {
+        "color": "#666",
+        "fontWeight": "bold",
+      }
+    }
+  >
+    62:64:0D:5F:87:9C
+  </Text>
+</View>
+`;
