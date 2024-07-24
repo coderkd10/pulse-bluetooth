@@ -1,0 +1,528 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders correctly 1`] = `
+<View
+  style={
+    {
+      "backgroundColor": "#fff",
+      "flex": 1,
+      "padding": 20,
+    }
+  }
+>
+  <View
+    accessibilityRole="button"
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": false,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "opacity": 1,
+      }
+    }
+  >
+    <View
+      style={
+        [
+          {},
+        ]
+      }
+    >
+      <Text
+        disabled={false}
+        style={
+          [
+            {
+              "color": "#007AFF",
+              "fontSize": 18,
+              "margin": 8,
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        Scan Bluetooth Devices
+      </Text>
+    </View>
+  </View>
+  <Text
+    style={
+      {
+        "fontSize": 18,
+        "fontWeight": "bold",
+        "marginVertical": 10,
+      }
+    }
+  >
+    Discovered Devices (
+    2
+    ):
+  </Text>
+  <RCTScrollView
+    data={
+      [
+        {
+          "isConnecting": false,
+          "peripheral": {
+            "advertising": {},
+            "id": "62:64:0D:5F:87:9C",
+            "name": "JBL Flip",
+            "rssi": 0,
+          },
+        },
+        {
+          "isConnecting": true,
+          "peripheral": {
+            "advertising": {},
+            "id": "34:4F:B1:C5:3E:D9",
+            "name": "My BT Speaker",
+            "rssi": 0,
+          },
+        },
+      ]
+    }
+    getItem={[Function]}
+    getItemCount={[Function]}
+    keyExtractor={[Function]}
+    onContentSizeChange={[Function]}
+    onLayout={[Function]}
+    onMomentumScrollBegin={[Function]}
+    onMomentumScrollEnd={[Function]}
+    onScroll={[Function]}
+    onScrollBeginDrag={[Function]}
+    onScrollEndDrag={[Function]}
+    removeClippedSubviews={false}
+    renderItem={[Function]}
+    scrollEventThrottle={0.0001}
+    stickyHeaderIndices={[]}
+    style={
+      {
+        "borderRadius": 5,
+        "borderWidth": 1,
+        "marginBottom": 20,
+        "minHeight": "10%",
+        "padding": 5,
+        "paddingBottom": 100,
+      }
+    }
+    viewabilityConfigCallbackPairs={[]}
+  >
+    <View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "borderColor": "#ccc",
+              "borderRadius": 5,
+              "borderWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginBottom": 10,
+              "padding": 10,
+            }
+          }
+        >
+          <View>
+            <Text
+              style={
+                {
+                  "fontSize": 16,
+                }
+              }
+            >
+              JBL Flip
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#666",
+                  "fontWeight": "bold",
+                }
+              }
+            >
+              62:64:0D:5F:87:9C
+            </Text>
+          </View>
+          <View
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "#007BFF",
+                "borderRadius": 5,
+                "opacity": 1,
+                "padding": 10,
+                "width": 100,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#fff",
+                  "fontWeight": "bold",
+                }
+              }
+            >
+              Connect
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "borderColor": "#ccc",
+              "borderRadius": 5,
+              "borderWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginBottom": 10,
+              "padding": 10,
+            }
+          }
+        >
+          <View>
+            <Text
+              style={
+                {
+                  "fontSize": 16,
+                }
+              }
+            >
+              My BT Speaker
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#666",
+                  "fontWeight": "bold",
+                }
+              }
+            >
+              34:4F:B1:C5:3E:D9
+            </Text>
+          </View>
+          <View
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": true,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "backgroundColor": "#ccc",
+                "borderRadius": 5,
+                "opacity": 1,
+                "padding": 10,
+                "width": 100,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#fff",
+                  "fontWeight": "bold",
+                }
+              }
+            >
+              Connecting
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+  <Text
+    style={
+      {
+        "fontSize": 18,
+        "fontWeight": "bold",
+        "marginVertical": 10,
+      }
+    }
+  >
+    Connected Devices (
+    1
+    ):
+  </Text>
+  <RCTScrollView
+    data={
+      [
+        {
+          "peripheral": {
+            "advertising": {},
+            "id": "75:8C:9C:43:EE:4C",
+            "name": "Pulse BT",
+            "rssi": 0,
+          },
+        },
+      ]
+    }
+    getItem={[Function]}
+    getItemCount={[Function]}
+    keyExtractor={[Function]}
+    onContentSizeChange={[Function]}
+    onLayout={[Function]}
+    onMomentumScrollBegin={[Function]}
+    onMomentumScrollEnd={[Function]}
+    onScroll={[Function]}
+    onScrollBeginDrag={[Function]}
+    onScrollEndDrag={[Function]}
+    removeClippedSubviews={false}
+    renderItem={[Function]}
+    scrollEventThrottle={0.0001}
+    stickyHeaderIndices={[]}
+    style={
+      {
+        "borderRadius": 5,
+        "borderWidth": 1,
+        "marginBottom": 20,
+        "minHeight": "10%",
+        "padding": 5,
+        "paddingBottom": 100,
+      }
+    }
+    viewabilityConfigCallbackPairs={[]}
+  >
+    <View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "borderColor": "#ccc",
+              "borderRadius": 5,
+              "borderWidth": 1,
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginBottom": 10,
+              "padding": 10,
+            }
+          }
+        >
+          <View>
+            <Text
+              style={
+                {
+                  "fontSize": 16,
+                }
+              }
+            >
+              Pulse BT
+            </Text>
+            <Text
+              style={
+                {
+                  "color": "#666",
+                  "fontWeight": "bold",
+                }
+              }
+            >
+              75:8C:9C:43:EE:4C
+            </Text>
+          </View>
+          <View
+            style={
+              {
+                "flexDirection": "row",
+                "gap": 10,
+              }
+            }
+          >
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onClick={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "red",
+                  "borderRadius": 5,
+                  "opacity": 1,
+                  "padding": 10,
+                  "width": 100,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#fff",
+                    "fontWeight": "bold",
+                  }
+                }
+              >
+                Disconnect
+              </Text>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": true,
+                  "expanded": undefined,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onClick={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#ccc",
+                  "borderRadius": 5,
+                  "opacity": 1,
+                  "padding": 10,
+                  "width": 100,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#fff",
+                    "fontWeight": "bold",
+                  }
+                }
+              >
+                Read Data
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;

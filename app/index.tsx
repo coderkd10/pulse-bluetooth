@@ -18,7 +18,7 @@ const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const getReadingDeviceCMapKey = (serviceID: string, characteristicID: string) =>
-  `${serviceID}-${characteristicID}`;
+  `${serviceID}:${characteristicID}`;
 
 export default function Index() {
   const [ isScanning, setIsScanning ] = useState(false);

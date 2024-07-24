@@ -5,8 +5,8 @@ import { DeviceName } from "./device_name";
 type BTDataReadingModalProps = {
   currentReadingDevice: BTReadingDevice | null,
   handleClose: () => void,
-
 };
+
 export const BTDataReadingModal = ({ currentReadingDevice, handleClose }: BTDataReadingModalProps) => {
   if (!currentReadingDevice) {
     return <></>;
